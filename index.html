@@ -6,4 +6,533 @@
   <title>Sakura Night Bloom</title>
   <style>
     :root{
-      --
+      --bg1:#050818;
+      --bg2:#0a0f2a;
+      --moon:#f6f1c7;
+      --moon2:#e7dca0;
+      --pink1:#ffd1e4;
+      --pink2:#ff9fc8;
+      --pink3:#ff6fb1;
+      --stem:#2a6b4a;
+      --leaf:#2e8c5f;
+      --glow: rgba(255, 170, 210, .45);
+      --text:#eaf1ff;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+    body{
+      overflow:hidden;
+      background: radial-gradient(1200px 800px at 70% 30%, #1a2460 0%, var(--bg2) 35%, var(--bg1) 70%, #020311 100%);
+      color: var(--text);
+    }
+
+    /* overlay */
+    .gate{
+      position:fixed; inset:0;
+      display:grid; place-items:center;
+      background: linear-gradient(to bottom, rgba(0,0,0,.55), rgba(0,0,0,.8));
+      z-index: 10;
+      backdrop-filter: blur(4px);
+      transition: opacity .6s ease, visibility .6s ease;
+    }
+    .gate.hidden{ opacity:0; visibility:hidden; }
+    .card{
+      width:min(560px, calc(100% - 28px));
+      padding:22px 18px;
+      border-radius:18px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.16);
+      box-shadow: 0 20px 60px rgba(0,0,0,.5);
+      text-align:center;
+    }
+    .card h1{
+      margin:0 0 10px;
+      font-size: clamp(20px, 3.2vw, 28px);
+      letter-spacing:.3px;
+    }
+    .card p{ margin:0 0 14px; opacity:.9; line-height:1.45; }
+    .startLink{
+      display:inline-block;
+      padding:12px 16px;
+      border-radius:999px;
+      text-decoration:none;
+      color:#081022;
+      background: linear-gradient(135deg, #fff 0%, #ffd7ea 40%, #ffb9d9 100%);
+      font-weight:700;
+      box-shadow: 0 10px 30px rgba(255,140,200,.25);
+      transform: translateY(0);
+      transition: transform .15s ease, filter .2s ease;
+    }
+    .startLink:hover{ transform: translateY(-2px); filter: brightness(1.03); }
+    .hint{ margin-top:12px; font-size: 12px; opacity:.75; }
+
+    /* night elements */
+    .sky{
+      position:fixed; inset:0;
+      z-index: 0;
+    }
+    .moon{
+      position:absolute;
+      width: 160px; height: 160px;
+      right: 8vw; top: 7vh;
+      border-radius:50%;
+      background: radial-gradient(circle at 35% 35%, var(--moon) 0%, var(--moon2) 55%, #cbbd7a 100%);
+      box-shadow: 0 0 40px rgba(255, 245, 200, .22), 0 0 120px rgba(255, 245, 200, .10);
+      opacity:.95;
+    }
+    .moon:after{
+      content:"";
+      position:absolute; inset:18px;
+      border-radius:50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 60%);
+      opacity:.7;
+    }
+    .twinkleLayer{
+      position:absolute; inset:0;
+      overflow:hidden;
+      pointer-events:none;
+    }
+    .star{
+      position:absolute;
+      width:2px; height:2px;
+      border-radius:50%;
+      background: rgba(255,255,255,.9);
+      box-shadow: 0 0 8px rgba(255,255,255,.6);
+      opacity:.9;
+      animation: twinkle var(--t, 3.2s) ease-in-out infinite;
+    }
+    .star.big{ width:3px; height:3px; }
+    .star.tiny{ width:1px; height:1px; opacity:.7; }
+    @keyframes twinkle{
+      0%,100%{ transform: scale(.85); opacity:.55; }
+      50%{ transform: scale(1.35); opacity:1; }
+    }
+
+    /* ground mist */
+    .mist{
+      position:absolute; left:-10%; right:-10%; bottom:-30%;
+      height: 55%;
+      background: radial-gradient(900px 300px at 50% 30%, rgba(255,255,255,.08) 0%, rgba(255,255,255,0) 70%);
+      filter: blur(2px);
+      opacity:.9;
+    }
+
+    /* center stage */
+    .stage{
+      position:fixed; inset:0;
+      display:grid;
+      place-items:end center;
+      padding-bottom: clamp(30px, 8vh, 80px);
+      z-index: 1;
+    }
+
+    /* flower container */
+    .flowerWrap{
+      position:relative;
+      width: min(520px, 90vw);
+      height: min(520px, 60vh);
+      display:grid;
+      place-items:center;
+      pointer-events:none;
+    }
+
+    /* stem */
+    .stem{
+      position:absolute;
+      bottom: 30px;
+      width: 10px;
+      height: 0px;
+      background: linear-gradient(to top, #184533, var(--stem));
+      border-radius: 999px;
+      filter: drop-shadow(0 8px 14px rgba(0,0,0,.35));
+      transform-origin: bottom center;
+      transform: rotate(-2deg);
+      opacity:0;
+    }
+    .leaf{
+      position:absolute;
+      width: 80px; height: 34px;
+      background: radial-gradient(circle at 30% 40%, #58c98d 0%, var(--leaf) 55%, #1a6d49 100%);
+      border-radius: 80px 80px 80px 10px;
+      transform-origin: 10% 50%;
+      opacity:0;
+      filter: drop-shadow(0 6px 12px rgba(0,0,0,.25));
+    }
+    .leaf.l1{ bottom: 150px; left: calc(50% - 78px); transform: rotate(-18deg) scale(.6); }
+    .leaf.l2{ bottom: 210px; left: calc(50% + 12px); transform: scaleX(-1) rotate(-12deg) scale(.62); }
+
+    /* blossom (SVG) */
+    .blossom{
+      position:absolute;
+      bottom: 240px;
+      width: 220px;
+      height: 220px;
+      transform: translateY(20px) scale(.15);
+      transform-origin: 50% 60%;
+      opacity:0;
+      filter: drop-shadow(0 0 24px var(--glow));
+    }
+
+    /* petals */
+    .petal{
+      transform-origin: 110px 120px;
+      transform: scale(0.2) rotate(var(--r)) translateY(0px);
+      opacity: .0;
+      filter: saturate(1.05);
+    }
+    .petal path{
+      fill: url(#petalGrad);
+    }
+    .centerDot{
+      opacity:0;
+      transform-origin: 110px 120px;
+      transform: scale(.5);
+    }
+
+    /* beetles */
+    .beetles{
+      position:fixed; inset:0;
+      z-index: 2;
+      pointer-events:none;
+    }
+    .beetle{
+      position:absolute;
+      width: 14px; height: 10px;
+      transform: translate(-50%,-50%);
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,.25));
+      opacity:0;
+    }
+    .beetle .body{
+      width: 14px; height: 10px;
+      border-radius: 10px;
+      background: radial-gradient(circle at 35% 35%, #ffd7a8 0%, #ff8b6b 40%, #b52b39 100%);
+      position:relative;
+    }
+    .beetle .body:before{
+      content:"";
+      position:absolute; left:2px; top:2px;
+      width: 4px; height: 4px;
+      background: rgba(255,255,255,.6);
+      border-radius: 999px;
+      opacity:.5;
+    }
+    .beetle .wing{
+      position:absolute;
+      width: 10px; height: 8px;
+      left: 2px; top: 1px;
+      border-radius: 10px 10px 10px 2px;
+      background: rgba(255,255,255,.22);
+      transform-origin: 15% 70%;
+      animation: flap .22s ease-in-out infinite;
+      mix-blend-mode: screen;
+    }
+    .beetle .wing.w2{ left: 6px; transform: scaleX(-1); opacity:.18; }
+    .beetle .eyes{
+      position:absolute; right:-2px; top: 3px;
+      width:4px; height:4px;
+      background:#09101f; border-radius:50%;
+      box-shadow: 0 0 0 2px rgba(255,255,255,.18);
+    }
+    @keyframes flap{
+      0%,100%{ transform: rotate(18deg); }
+      50%{ transform: rotate(-18deg); }
+    }
+
+    /* start animations (added via .blooming on body) */
+    body.blooming .stem{
+      opacity:1;
+      animation: growStem 2.2s cubic-bezier(.2,.8,.2,1) forwards;
+    }
+    body.blooming .leaf{
+      opacity:1;
+      animation: leafPop 1.2s cubic-bezier(.2,.8,.2,1) forwards;
+      animation-delay: .9s;
+    }
+    body.blooming .leaf.l2{ animation-delay: 1.05s; }
+
+    body.blooming .blossom{
+      opacity:1;
+      animation: blossomRise 2.3s cubic-bezier(.18,.9,.2,1) forwards;
+      animation-delay: 1.2s;
+    }
+
+    body.blooming .petal{
+      animation: petalBloom 1.6s cubic-bezier(.2,.85,.2,1) forwards;
+      animation-delay: calc(1.55s + var(--d));
+    }
+    body.blooming .centerDot{
+      animation: centerPop 1s ease forwards;
+      animation-delay: 2.6s;
+    }
+
+    body.blooming .beetle{
+      opacity:1;
+      transition: opacity .6s ease;
+    }
+
+    @keyframes growStem{
+      0%{ height:0px; }
+      60%{ height: 260px; }
+      100%{ height: 300px; }
+    }
+    @keyframes leafPop{
+      0%{ transform: translateY(8px) scale(.2) rotate(-18deg); opacity:0; }
+      100%{ transform: translateY(0px) scale(.62) rotate(-18deg); opacity:1; }
+    }
+    @keyframes blossomRise{
+      0%{ transform: translateY(40px) scale(.12); opacity:0; }
+      70%{ transform: translateY(6px) scale(.85); opacity:1; }
+      100%{ transform: translateY(0px) scale(1); opacity:1; }
+    }
+    @keyframes petalBloom{
+      0%{
+        transform: scale(.12) rotate(var(--r)) translateY(0px);
+        opacity:0;
+      }
+      60%{
+        transform: scale(1.04) rotate(var(--r)) translateY(-2px);
+        opacity:1;
+      }
+      100%{
+        transform: scale(1) rotate(var(--r)) translateY(0px);
+        opacity:1;
+      }
+    }
+    @keyframes centerPop{
+      0%{ opacity:0; transform: scale(.4); }
+      60%{ opacity:1; transform: scale(1.15); }
+      100%{ opacity:1; transform: scale(1); }
+    }
+
+    /* subtle floating */
+    body.blooming .blossom{
+      animation-name: blossomRise, floaty;
+      animation-duration: 2.3s, 4.5s;
+      animation-delay: 1.2s, 3.5s;
+      animation-fill-mode: forwards, both;
+      animation-iteration-count: 1, infinite;
+      animation-timing-function: cubic-bezier(.18,.9,.2,1), ease-in-out;
+    }
+    @keyframes floaty{
+      0%,100%{ transform: translateY(0px) scale(1); }
+      50%{ transform: translateY(-6px) scale(1); }
+    }
+
+    /* footer note */
+    .footer{
+      position:fixed;
+      left:0; right:0; bottom:10px;
+      text-align:center;
+      font-size:12px;
+      opacity:.7;
+      z-index: 3;
+      pointer-events:none;
+    }
+  </style>
+</head>
+<body>
+  <div class="sky" aria-hidden="true">
+    <div class="moon"></div>
+    <div class="twinkleLayer" id="stars"></div>
+    <div class="mist"></div>
+  </div>
+
+  <div class="stage">
+    <div class="flowerWrap" aria-hidden="true">
+      <div class="stem" id="stem"></div>
+      <div class="leaf l1"></div>
+      <div class="leaf l2"></div>
+
+      <!-- Sakura blossom (SVG) -->
+      <svg class="blossom" viewBox="0 0 220 220">
+        <defs>
+          <radialGradient id="petalGrad" cx="30%" cy="30%" r="80%">
+            <stop offset="0%" stop-color="var(--pink1)"/>
+            <stop offset="55%" stop-color="var(--pink2)"/>
+            <stop offset="100%" stop-color="var(--pink3)"/>
+          </radialGradient>
+          <radialGradient id="centerGrad" cx="40%" cy="35%" r="70%">
+            <stop offset="0%" stop-color="#fff2b8"/>
+            <stop offset="60%" stop-color="#ffd46a"/>
+            <stop offset="100%" stop-color="#ff9f3c"/>
+          </radialGradient>
+        </defs>
+
+        <!-- 5 petals -->
+        <g class="petal" style="--r:0deg;   --d:0s;">
+          <path d="M110 45
+                   C95 55, 75 75, 80 100
+                   C84 120, 103 132, 110 142
+                   C117 132, 136 120, 140 100
+                   C145 75, 125 55, 110 45Z"/>
+        </g>
+        <g class="petal" style="--r:72deg;  --d:.07s;">
+          <path d="M110 45
+                   C95 55, 75 75, 80 100
+                   C84 120, 103 132, 110 142
+                   C117 132, 136 120, 140 100
+                   C145 75, 125 55, 110 45Z"/>
+        </g>
+        <g class="petal" style="--r:144deg; --d:.14s;">
+          <path d="M110 45
+                   C95 55, 75 75, 80 100
+                   C84 120, 103 132, 110 142
+                   C117 132, 136 120, 140 100
+                   C145 75, 125 55, 110 45Z"/>
+        </g>
+        <g class="petal" style="--r:216deg; --d:.21s;">
+          <path d="M110 45
+                   C95 55, 75 75, 80 100
+                   C84 120, 103 132, 110 142
+                   C117 132, 136 120, 140 100
+                   C145 75, 125 55, 110 45Z"/>
+        </g>
+        <g class="petal" style="--r:288deg; --d:.28s;">
+          <path d="M110 45
+                   C95 55, 75 75, 80 100
+                   C84 120, 103 132, 110 142
+                   C117 132, 136 120, 140 100
+                   C145 75, 125 55, 110 45Z"/>
+        </g>
+
+        <!-- center -->
+        <g class="centerDot">
+          <circle cx="110" cy="120" r="18" fill="url(#centerGrad)"/>
+          <!-- tiny dots -->
+          <circle cx="103" cy="114" r="2.2" fill="#7a3b00" opacity=".55"/>
+          <circle cx="119" cy="112" r="2.2" fill="#7a3b00" opacity=".55"/>
+          <circle cx="110" cy="128" r="2.2" fill="#7a3b00" opacity=".55"/>
+          <circle cx="99"  cy="126" r="2.0" fill="#7a3b00" opacity=".5"/>
+          <circle cx="123" cy="127" r="2.0" fill="#7a3b00" opacity=".5"/>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <div class="beetles" id="beetles" aria-hidden="true"></div>
+
+  <div class="footer">Sakura Night Bloom ✨ (klik tombol di awal untuk memulai)</div>
+
+  <!-- Start overlay -->
+  <div class="gate" id="gate">
+    <div class="card">
+      <h1>🌸 Sakura di Malam Hari</h1>
+      <p>Klik untuk melihat bunga sakura tumbuh dari kecil sampai mekar cantik, ditemani bintang, bulan, dan kumbang kecil yang lucu.</p>
+      <a class="startLink" href="#" id="start">Klik di sini untuk mulai</a>
+      <div class="hint">Jika tampil 404 di GitHub Pages: pastikan file bernama <b>index.html</b> dan ada di root repo.</div>
+    </div>
+  </div>
+
+  <script>
+    // ---------- stars ----------
+    const starsEl = document.getElementById("stars");
+    const STAR_COUNT = 120;
+
+    function rand(min,max){ return Math.random()*(max-min)+min; }
+
+    for(let i=0;i<STAR_COUNT;i++){
+      const s = document.createElement("div");
+      const sizeRoll = Math.random();
+      s.className = "star" + (sizeRoll>0.92 ? " big" : (sizeRoll<0.35 ? " tiny" : ""));
+      s.style.left = rand(0,100) + "vw";
+      s.style.top  = rand(0,100) + "vh";
+      s.style.setProperty("--t", rand(2.2, 5.4).toFixed(2) + "s");
+      s.style.animationDelay = (-rand(0, 5)).toFixed(2) + "s";
+      s.style.opacity = rand(0.35, 1).toFixed(2);
+      starsEl.appendChild(s);
+    }
+
+    // ---------- beetles ----------
+    const beetlesWrap = document.getElementById("beetles");
+    const BEETLE_COUNT = 9;
+    const beetles = [];
+
+    function makeBeetle(){
+      const b = document.createElement("div");
+      b.className = "beetle";
+      b.innerHTML = `
+        <div class="body">
+          <div class="wing"></div>
+          <div class="wing w2"></div>
+          <div class="eyes"></div>
+        </div>
+      `;
+      beetlesWrap.appendChild(b);
+
+      // start position bottom-ish
+      const obj = {
+        el: b,
+        x: rand(10, 90),
+        y: rand(55, 90),
+        vx: rand(-0.08, 0.08),
+        vy: rand(-0.06, 0.06),
+        wob: rand(0, Math.PI*2),
+        speed: rand(0.65, 1.25),
+        rot: rand(-25, 25),
+      };
+      beetles.push(obj);
+    }
+
+    for(let i=0;i<BEETLE_COUNT;i++) makeBeetle();
+
+    function animateBeetles(){
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      for(const b of beetles){
+        b.wob += 0.05 * b.speed;
+
+        // drift with wobble (cute movement)
+        b.x += (b.vx * w/100) + Math.sin(b.wob) * 0.35;
+        b.y += (b.vy * h/100) + Math.cos(b.wob*0.9) * 0.28;
+
+        // gentle attraction toward blossom area
+        const targetX = 50;
+        const targetY = 45;
+        b.x += (targetX - b.x) * 0.0009 * b.speed;
+        b.y += (targetY - b.y) * 0.0007 * b.speed;
+
+        // bounce edges
+        if(b.x < 2){ b.x = 2; b.vx = Math.abs(b.vx); }
+        if(b.x > 98){ b.x = 98; b.vx = -Math.abs(b.vx); }
+        if(b.y < 8){ b.y = 8; b.vy = Math.abs(b.vy); }
+        if(b.y > 95){ b.y = 95; b.vy = -Math.abs(b.vy); }
+
+        // face direction
+        const angle = Math.atan2(b.vy, b.vx) * 180/Math.PI;
+        b.el.style.left = b.x + "vw";
+        b.el.style.top  = b.y + "vh";
+        b.el.style.transform = `translate(-50%,-50%) rotate(${angle + b.rot}deg)`;
+      }
+      requestAnimationFrame(animateBeetles);
+    }
+
+    // ---------- start interaction ----------
+    const gate = document.getElementById("gate");
+    const startBtn = document.getElementById("start");
+    let started = false;
+
+    function startBloom(){
+      if(started) return;
+      started = true;
+
+      document.body.classList.add("blooming");
+      gate.classList.add("hidden");
+
+      // start beetles motion AFTER click
+      animateBeetles();
+    }
+
+    startBtn.addEventListener("click", (e)=>{
+      e.preventDefault();
+      startBloom();
+    });
+
+    // also allow click anywhere on overlay card to start (optional)
+    gate.addEventListener("click", (e)=>{
+      // avoid starting if user selects text, but mostly fine:
+      if(e.target.id === "gate") startBloom();
+    });
+  </script>
+</body>
+</html>
